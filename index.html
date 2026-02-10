@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>代理推广系统 - 旗舰版</title>
+    <!-- 引入图标库 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF5500;
+            --secondary: #FF9900;
+            --bg-color: #f7f8fa;
+            --text-main: #333333;
+            --text-sub: #999999;
+            --card-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            --nav-height: 60px;
+            --status-pending: #ff9900;
+            --status-done: #07c160;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: var(--nav-height); overflow-x: hidden; }
+        
+        /* === 页面控制 === */
+        .tab-page { display: none; min-height: 100vh; animation: fadeIn 0.2s; }
+        .tab-page.active { display: block; }
+        
+        .sub-page { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--bg-color); z-index: 200; 
+            display: none; overflow-y: auto; 
+            animation: slideLeft 0.3s forwards;
+        }
+        .sub-page.active { display: block; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideLeft { from { transform: translateX(100%); } to { transform: translateX(0); } }
+
+        /* === 顶部导航栏 === */
+        .header-bar {
+            height: 44px; background: #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 16px; font-weight: bold; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #f0f0f0;
+        }
+        .back-btn { position: absolute; left: 15px; width: 40px; height: 44px; display: flex; align-items: center; font-size: 18px; color: #333; }
+
+        /* === 首页看板 === */
+        .dashboard-bg {
+            background: linear-gradient(135deg, #1a1a1a, #333);
+            color: #fff; padding: 20px 20px 80px;
+            border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;
+        }
+        .user-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .user-info { display: flex; align-items: center; }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.3); margin-right: 12px; }
+        
+        /* 今日数据卡片 */
+        .today-card {
+            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 12px; padding: 15px; display: flex; justify-content: space-around;
+            backdrop-filter: blur(5px); cursor: pointer;
+        }
+        .today-item { text-align: center; }
+        .today-val { font-size: 20px; font-weight: bold; color: #fff; margin-bottom: 4px; }
+        .today-label { font-size: 11px; color: rgba(255,255,255,0.7); }
+
+        /* 数据汇总 */
+        .total-card {
+            background: #fff; margin: -60px 15px 15px; border-radius: 16px;
+            padding: 20px; box-shadow: var(--card-shadow);
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+        .total-item h4 { font-size: 22px; margin-bottom: 5px; }
+        .total-item p { font-size: 11px; color: var(--text-sub); }
+
+        /* 菜单列表 */
+        .menu-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;
+            background: #fff; margin: 15px; padding: 20px 10px; border-radius: 16px;
+        }
+        .menu-btn { display: flex; flex-direction: column; align-items: center; font-size: 12px; color: #666; }
+        .menu-icon-box {
+            width: 44px; height: 44px; border-radius: 12px; margin-bottom: 8px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+
+        /* === 订单列表项 === */
+        .order-card {
+            background: #fff; margin: 10px 15px; border-radius: 12px; padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .order-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .order-no { font-size: 12px; color: #999; }
+        .order-status { font-size: 12px; font-weight: bold; }
+        .order-body { display: flex; justify-content: space-between; align-items: center; }
+        .order-user { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+        .order-meta { font-size: 12px; color: #666; }
+        .order-money { text-align: right; }
+        .earn-val { color: var(--primary); font-size: 16px; font-weight: bold; }
+
+        /* === 云仓列表 === */
+        .product-card {
+            background: #fff; border-radius: 12px; padding: 12px; margin: 0 15px 12px;
+            display: flex; box-shadow: var(--card-shadow);
+        }
+        .prod-img { width: 90px; height: 90px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+        .prod-info { margin-left: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .prod-title { font-size: 14px; line-height: 1.4; color: #333; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .commission-badge { background: #fff0e6; color: var(--primary); font-size: 12px; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-top: 5px; }
+
+        /* === 底部导航 === */
+        .bottom-nav {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: var(--nav-height);
+            background: #fff; display: flex; border-top: 1px solid #eee; z-index: 150;
+        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #ccc; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item i { font-size: 20px; margin-bottom: 2px; }
+        .nav-item span { font-size: 10px; }
+
+        /* 模态框 */
+        .modal-mask {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6);
+            z-index: 1000; display: none; align-items: flex-end;
+        }
+        .modal-panel { background: #fff; width: 100%; border-radius: 20px 20px 0 0; padding: 25px; animation: slideUp 0.3s; }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <!-- ================== Tab 1: 工作台 ================== -->
+    <div id="tab-home" class="tab-page active">
+        <div class="dashboard-bg">
+            <div class="user-row">
+                <div class="user-info">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="avatar">
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold;">Alex 推广员</div>
+                        <div style="font-size: 11px; opacity: 0.7;">等级: 一级代理商</div>
+                    </div>
+                </div>
+                <div onclick="showModal('qr-modal')" style="font-size: 20px;"><i class="fas fa-qrcode"></i></div>
+            </div>
+
+            <!-- 今日数据 (点击跳转订单) -->
+            <div class="today-card" onclick="openSubPage('page-today-orders')">
+                <div class="today-item">
+                    <div class="today-val">¥ 286.00</div>
+                    <div class="today-label">今日分成 <i class="fas fa-chevron-right" style="font-size: 8px;"></i></div>
+                </div>
+                <div style="width: 1px; background: rgba(255,255,255,0.2);"></div>
+                <div class="today-item">
+                    <div class="today-val">8</div>
+                    <div class="today-label">今日订单 <i class="fas fa-chevron-right" style="font-size: 8px;"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="total-card">
+            <div class="total-item">
+                <p>累计总收益 (元)</p>
+                <h4 style="color: var(--primary);">12,840.50</h4>
+            </div>
+            <div class="total-item">
+                <p>可提现余额</p>
+                <h4>580.00</h4>
+                <div style="margin-top:5px;"><a onclick="openSubPage('page-withdraw')" style="color:var(--primary); font-size:12px;">去提现 ></a></div>
+            </div>
+        </div>
+
+        <div class="menu-grid">
+            <div class="menu-btn" onclick="openSubPage('page-today-orders')">
+                <div class="menu-icon-box" style="background:#e6f7ff; color:#1890ff;"><i class="fas fa-list-ul"></i></div>
+                订单列表
+            </div>
+            <div class="menu-btn" onclick="openSubPage('page-team')">
+                <div class="menu-icon-box" style="background:#f6ffed; color:#52c41a;"><i class="fas fa-users"></i></div>
+                下级管理
+            </div>
+            <div class="menu-btn" onclick="openSubPage('page-add-agent')">
+                <div class="menu-icon-box" style="background:#fff7e6; color:#fa8c16;"><i class="fas fa-user-plus"></i></div>
+                添加代理
+            </div>
+            <div class="menu-btn" onclick="switchTab('tab-cloud')">
+                <div class="menu-icon-box" style="background:#fff0f6; color:#eb2f96;"><i class="fas fa-store"></i></div>
+                云仓选品
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== Tab 2: 云仓选品 ================== -->
+    <div id="tab-cloud" class="tab-page">
+        <div class="header-bar">云仓选品库</div>
+        <div style="padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; background: #fff; margin-bottom: 10px;">
+            <div style="padding: 4px 12px; background: var(--primary); color: #fff; border-radius: 20px; font-size: 12px;">全部</div>
+            <div style="padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px;">数码</div>
+            <div style="padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px;">美妆</div>
+            <div style="padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px;">百货</div>
+        </div>
+        <div id="product-list"></div>
+    </div>
+
+    <!-- ================== 子页面: 今日订单列表 ================== -->
+    <div id="page-today-orders" class="sub-page">
+        <div class="header-bar">
+            <div class="back-btn" onclick="closeSubPage('page-today-orders')"><i class="fas fa-arrow-left"></i></div>
+            今日订单明细
+        </div>
+        
+        <!-- 统计摘要 -->
+        <div style="background: #fff; padding: 15px; display: flex; justify-content: space-around; text-align: center; margin-bottom: 10px;">
+            <div>
+                <div style="font-size: 18px; font-weight: bold; color: var(--primary);">¥ 286.00</div>
+                <div style="font-size: 11px; color: #999;">预估分成</div>
+            </div>
+            <div style="width: 1px; background: #eee;"></div>
+            <div>
+                <div style="font-size: 18px; font-weight: bold;">8</div>
+                <div style="font-size: 11px; color: #999;">订单笔数</div>
+            </div>
+        </div>
+
+        <div id="order-list-container">
+            <!-- 订单卡片由JS生成 -->
+        </div>
+    </div>
+
+    <!-- 子页面: 团队管理 -->
+    <div id="page-team" class="sub-page">
+        <div class="header-bar">
+            <div class="back-btn" onclick="closeSubPage('page-team')"><i class="fas fa-arrow-left"></i></div>
+            下级管理
+        </div>
+        <div id="team-list" style="padding-top:10px;"></div>
+    </div>
+
+    <!-- 子页面: 提现 -->
+    <div id="page-withdraw" class="sub-page">
+        <div class="header-bar">
+            <div class="back-btn" onclick="closeSubPage('page-withdraw')"><i class="fas fa-arrow-left"></i></div>
+            余额提现
+        </div>
+        <div style="padding: 20px; background: #fff;">
+            <p style="font-size: 12px; color: #999;">提现金额</p>
+            <div style="display:flex; align-items:center; border-bottom:1px solid #eee; padding: 15px 0;">
+                <span style="font-size: 24px; font-weight: bold; margin-right: 10px;">¥</span>
+                <input type="number" placeholder="最低提现10元" style="border:none; outline:none; font-size: 24px; width:100%;">
+            </div>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">当前余额 ¥580.00，<span style="color:var(--primary);">全部提现</span></p>
+            <button onclick="alert('提现申请已提交')" style="width:100%; padding:14px; background:var(--primary); color:#fff; border:none; border-radius:25px; margin-top:30px; font-size:16px;">提交申请</button>
+        </div>
+    </div>
+
+    <!-- 子页面: 添加代理 -->
+    <div id="page-add-agent" class="sub-page">
+        <div class="header-bar">
+            <div class="back-btn" onclick="closeSubPage('page-add-agent')"><i class="fas fa-arrow-left"></i></div>
+            添加下级代理
+        </div>
+        <div style="background: #fff; margin-top: 10px; padding: 0 15px;">
+            <div style="display:flex; align-items:center; padding:15px 0; border-bottom:1px solid #eee;">
+                <label style="width:80px; font-size:14px;">姓名</label>
+                <input type="text" id="add-name" placeholder="请输入代理姓名" style="border:none; outline:none; flex:1;">
+            </div>
+            <div style="display:flex; align-items:center; padding:15px 0;">
+                <label style="width:80px; font-size:14px;">手机号</label>
+                <input type="tel" id="add-phone" placeholder="请输入11位手机号" style="border:none; outline:none; flex:1;">
+            </div>
+        </div>
+        <button onclick="handleAddAgent()" style="width:90%; margin:30px 5%; padding:14px; background:var(--primary); color:#fff; border:none; border-radius:25px; font-size:16px;">确认添加</button>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('tab-home')" id="nav-home">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>工作台</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('tab-cloud')" id="nav-cloud">
+            <i class="fas fa-cube"></i>
+            <span>云仓选品</span>
+        </div>
+        <div class="nav-item" onclick="alert('个人中心')">
+            <i class="fas fa-user-circle"></i>
+            <span>我的</span>
+        </div>
+    </nav>
+
+    <!-- 弹窗: 二维码 -->
+    <div class="modal-mask" id="qr-modal" style="display:none; align-items:center; justify-content:center;" onclick="this.style.display='none'">
+        <div style="background:#fff; padding:30px; border-radius:12px; text-align:center;">
+            <h3>邀请合伙人</h3>
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=INVITE_ABC" style="margin:20px 0;">
+            <p style="font-size:12px; color:#666;">面对面扫码绑定下级关系</p>
+        </div>
+    </div>
+
+    <script>
+        // === 模拟数据 ===
+        const products = [
+            { name: "智能运动手表 通话心率监测", price: 299.00, earn: 45.00, img: "https://via.placeholder.com/150/09f/fff?text=Watch" },
+            { name: "无源降噪蓝牙耳机 HIFI音质", price: 158.00, earn: 24.00, img: "https://via.placeholder.com/150/333/fff?text=Earbuds" },
+            { name: "大容量筋膜枪 肌肉放松器", price: 199.00, earn: 30.00, img: "https://via.placeholder.com/150/ff9900/fff?text=Massage" }
+        ];
+
+        const todayOrders = [
+            { id: "ORD662024021001", user: "王晓明", total: 299.00, earn: 45.00, status: "已结算", time: "14:20" },
+            { id: "ORD662024021002", user: "张丽娜", total: 158.00, earn: 24.00, status: "待结算", time: "15:45" },
+            { id: "ORD662024021003", user: "李志强", total: 89.00, earn: 13.50, status: "已结算", time: "16:10" },
+            { id: "ORD662024021004", user: "陈静", total: 599.00, earn: 80.00, status: "待结算", time: "17:30" }
+        ];
+
+        const teamMembers = [
+            { name: "王晓明", phone: "138****8899", date: "2024-01-10", orders: 15 },
+            { name: "张丽娜", phone: "159****2233", date: "2024-01-15", orders: 8 }
+        ];
+
+        // === 核心逻辑 ===
+        window.onload = function() {
+            renderProducts();
+            renderOrders();
+            renderTeam();
+        };
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.getElementById('nav-' + tabId.split('-')[1]).classList.add('active');
+        }
+
+        function openSubPage(pageId) {
+            document.getElementById(pageId).classList.add('active');
+        }
+
+        function closeSubPage(pageId) {
+            document.getElementById(pageId).classList.remove('active');
+        }
+
+        function renderProducts() {
+            const list = document.getElementById('product-list');
+            list.innerHTML = products.map(p => `
+                <div class="product-card">
+                    <img src="${p.img}" class="prod-img">
+                    <div class="prod-info">
+                        <div class="prod-title">${p.name}</div>
+                        <div>
+                            <div class="commission-badge">赚 ¥${p.earn.toFixed(2)}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-top:5px;">
+                                <div style="font-weight:bold;">¥${p.price.toFixed(2)}</div>
+                                <button onclick="alert('推广链接已复制')" style="background:var(--primary); color:#fff; border:none; padding:4px 12px; border-radius:15px; font-size:11px;">分享</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrders() {
+            const list = document.getElementById('order-list-container');
+            list.innerHTML = todayOrders.map(o => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-no">${o.id}</span>
+                        <span class="order-status" style="color:${o.status==='已结算'? 'var(--status-done)':'var(--status-pending)'}">${o.status}</span>
+                    </div>
+                    <div class="order-body">
+                        <div class="list-info">
+                            <div class="order-user">推广人: ${o.user}</div>
+                            <div class="order-meta">实付金额: ¥${o.total.toFixed(2)}</div>
+                            <div class="order-meta">下单时间: ${o.time}</div>
+                        </div>
+                        <div class="order-money">
+                            <div style="font-size:11px; color:#999;">分成金额</div>
+                            <div class="earn-val">¥${o.earn.toFixed(2)}</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderTeam() {
+            const list = document.getElementById('team-list');
+            list.innerHTML = teamMembers.map(m => `
+                <div style="background:#fff; margin:0 15px 10px; padding:15px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold;">${m.name}</div>
+                        <div style="font-size:12px; color:#999;">${m.phone} | ${m.date}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="color:var(--primary); font-weight:bold;">${m.orders} 笔订单</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function handleAddAgent() {
+            const name = document.getElementById('add-name').value;
+            const phone = document.getElementById('add-phone').value;
+            if(!name || !phone) return alert('请填写完整信息');
+            alert(`成功添加代理: ${name}`);
+            closeSubPage('page-add-agent');
+        }
+
+        function showModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+    </script>
+</body>
+</html>
