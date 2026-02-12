@@ -194,8 +194,10 @@
     <div id="tab-cloud" class="tab-page">
         <div class="header-bar">云仓选品库</div>
         <div style="padding: 10px 15px; display: flex; gap: 10px; overflow-x: auto; background: #fff; margin-bottom: 10px;">
-            <div style="padding: 4px 12px; background: var(--primary); color: #fff; border-radius: 20px; font-size: 12px;">推荐</div>
-            
+            <div style="padding: 4px 12px; background: var(--primary); color: #fff; border-radius: 20px; font-size: 12px;">全部</div>
+            <div style="padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px;">数码</div>
+            <div style="padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px;">美妆</div>
+            <div style="padding: 4px 12px; background: #f0f0f0; border-radius: 20px; font-size: 12px;">百货</div>
         </div>
         <div id="product-list"></div>
     </div>
@@ -298,9 +300,9 @@
     <script>
         // === 模拟数据 ===
         const products = [
-            { name: "超元艺术空间（现代）", price: 15,900.00, earn: 150.00, img: "https://via.placeholder.com/150/09f/fff?text=Watch" },
-            { name: "超元科技展厅", price: 15,900.00, earn: 150.00, img: "https://via.placeholder.com/150/333/fff?text=Earbuds" },
-            { name: "超云企业办公室", price: 15,900.00, earn: 150.00, img: "https://via.placeholder.com/150/ff9900/fff?text=Massage" }
+            { name: "智能运动手表 通话心率监测", price: 299.00, earn: 45.00, img: "https://via.placeholder.com/150/09f/fff?text=Watch" },
+            { name: "无源降噪蓝牙耳机 HIFI音质", price: 158.00, earn: 24.00, img: "https://via.placeholder.com/150/333/fff?text=Earbuds" },
+            { name: "大容量筋膜枪 肌肉放松器", price: 199.00, earn: 30.00, img: "https://via.placeholder.com/150/ff9900/fff?text=Massage" }
         ];
 
         const todayOrders = [
@@ -407,6 +409,4 @@
         }
     </script>
 </body>
-
 </html>
-
